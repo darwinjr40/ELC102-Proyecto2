@@ -1,0 +1,43 @@
+//this.snakeTail = new ModelSnake(5,  0,  imageWidth,  imageHeight, "snake.png", 547, 1701, 385, 387);
+//this.snakeHead = new ModelSnake( 5,  8,  imageWidth,  imageHeight, "snake.png", 546, 2088, 385, 384);//cabeza
+//this.food = new ModelFood(2, 1, imageWidth, imageHeight, "snake.png", 1, 1764, 544, 457);
+
+
+private String[] foodTypes = {
+            "celeste", "chocolate", "chocolate1", "rojo", "green","orange", "pink", "pink1",
+            "red", "white", "white1", "yellow"};
+
+
+//-------------------------------------------------------------------------
+   /*
+   Retorna la nueva direccion de la cola
+    */
+    private Direction getNextDirection(){
+        Direction op = gerDirOpuesta(snakeTail.getDir());
+        byte ele = m.get(snakeTail.getFil(), snakeTail.getCol());
+//        Direction dir = snakeTail.getDir();
+//        int a = Integer.MAX_VALUE;
+//        for (Direction d : Direction.values()) {
+//            byte x = m.getEleSig(snakeTail.getFil(), snakeTail.getCol(), d);
+//            if ( esSnake(x) && d != op){
+//                int b = Math.abs(ele-x);
+//                if (b < a){
+//                    a = b;
+//                    dir = d;
+//                }
+//            }
+//        }
+
+        Direction[] directions = Direction.values();
+        int i = 0, n = directions.length;
+        Direction dir = snakeTail.getDir();
+        while (i < n && dir == snakeTail.getDir()){
+            byte e = m.getEleSig(snakeTail.getFil(), snakeTail.getCol(), directions[i]);
+            if ( (dir != op) && (esSnake(e)) && (Math.abs(ele-e) == 1) ){
+                    dir = directions[i];
+            }
+            i++;
+        }
+        return dir;
+    }
+//-------------------------------------------------------------------------
