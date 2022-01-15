@@ -80,14 +80,95 @@ public class ControllerGame  extends Thread implements InputProcessor{
 
         }
     }
-
     public void moveSnake() {
-        System.out.println(m.toString());
-
-            this.checkMovimiento();
-
+//        System.out.println(m.toString());
+        this.checkMovimiento();
 //        System.out.println(snakeTail.toString() );
 //        System.out.println(snakeHead.toString() );
+    }
+
+    /*
+     Colisiono con su cuerpo
+      */
+    private void checkMovimiento() {
+        byte e = this.m.getEleSig(snakeHead.getFil(), snakeHead.getCol(), snakeHead.getDir());
+        if( this.isColision(e))  { //choco con su cuerpo o con una pared
+            lives--;
+            this.checkLives();
+        }else if (e == food.getValue()) {//se comio
+            this.score++;   this.size++;
+            this.checkLevel();
+            this.food.generateFood(m);
+            if (l == 2 && delay >= 50) {
+                delay -= 4;
+            }
+            SoundPlayer.playSound(Asset.EAT_FOOD_SOUND, false);
+        } else {
+            this.setDirectionTail();//toca mover la cola
+            this.setDirectionHead();//toca mover cabeza
+        }
+
+//        if (!gameOver && !isColision(e)  )
+    }
+
+
+
+
+    /*
+    movemos la cabeza(segun la direccion en la que se encuentre)
+     */
+    public void setDirectionHead() {
+        int f = snakeHead.getFil();
+        int c = snakeHead.getCol();
+        snakeHead.setNextPos(m.getNfil(), m.getNcol()); //mueve la pos de la cabeza
+
+//        ||(Math.abs(snakeTail.getFil()-f) != 1)
+//        ||(Math.abs(snakeTail.getCol()-c) != 1)
+//        System.out.println(Math.abs(snakeHead.getCol()-c));
+//        if ((Math.abs(snakeHead.getCol()-c) != 1) && (snakeHead.getCol()!=c)) {
+//            lives--;
+//            this.checkLives();
+//        }
+        t = (sw)? (byte)(t+1) : (byte)(t-1);
+        if (t == 10 || t == 30) { sw=!sw;}
+        this.m.set(snakeHead.getFil(), snakeHead.getCol(), t);//marcar la pos de la cabeza en la matriz
+    }
+
+    public void setDirectionTail() {
+        Direction dir = this.getNextDirection();
+        if (dir != snakeTail.getDir()) {snakeTail.setDir(dir);}
+        this.m.set(snakeTail.getFil(), snakeTail.getCol(), (byte)0); //apagar
+        this.snakeTail.setNextPos(m.getNfil(), m.getNcol());//actualiza la pos de la cola
+    }
+
+
+
+
+
+    public boolean isColision(byte e) {
+        return this.esSnake(e) || this.block.getValue()==e;
+    }
+
+    private void checkLives(){
+        if(lives == 0){
+            this.snakeHead.setDir(Direction.NONE);
+            SoundPlayer.stopMusic(Asset.GAME_SOUND);
+            SoundPlayer.playMusic(Asset.GAME_OVER_SOUND, false);
+            if (snakeHead.getDir() == Direction.NONE) {
+                    initAnimation();
+                    this.pausar();
+                    this.initSnake();
+                    this.loadLevel(1);
+                    this.init();
+                    this.gameScreen.getGame().setScreenMenu();
+
+            }
+        }else {
+            this.initSnake(); //cargar snake de nuevo
+            this.loadLevel(l);
+            SoundPlayer.playSound(Asset.CRASH_SOUND, false);
+        }
+        food.generateFood(m);
     }
 
     private void initAnimation() {
@@ -119,77 +200,9 @@ public class ControllerGame  extends Thread implements InputProcessor{
         }
         modelAnimation.setFilCol(f, c);
     }
-    /*
-    movemos la cabeza(segun la direccion en la que se encuentre)
-     */
-    public void setDirectionHead() {
-        snakeHead.setNextPos(m.getNfil(), m.getNcol()); //mueve la pos de la cabeza
-        t = (sw)? (byte)(t+1) : (byte)(t-1);
-        if (t == 10 || t == 30) { sw=!sw;}
-        this.m.set(snakeHead.getFil(), snakeHead.getCol(), t);//marcar la pos de la cabeza en la matriz
-    }
-
-    public void setDirectionTail() {
-        Direction dir = this.getNextDirection();
-        if (dir != snakeTail.getDir()) {snakeTail.setDir(dir);}
-        this.m.set(snakeTail.getFil(), snakeTail.getCol(), (byte)0); //apagar
-        this.snakeTail.setNextPos(m.getNfil(), m.getNcol());//actualiza la pos de la cola
-    }
-
-
-
-    /*
-    Colisiono con su cuerpo
-     */
-    private void checkMovimiento() {
-        byte e = this.m.getEleSig(snakeHead.getFil(), snakeHead.getCol(), snakeHead.getDir());
-        if( this.isColision(e))  { //choco con su cuerpo o con una pared
-            lives--;
-            this.checkLives();
-        }else if (e == food.getValue()) {//se comio
-            this.score++;   this.size++;
-            this.checkLevel();
-            this.food.generateFood(m);
-            if (l == 2 && delay >= 50) {
-                delay -= 5;
-            }
-            SoundPlayer.playSound(Asset.EAT_FOOD_SOUND, false);
-        } else {
-            this.setDirectionTail();//toca mover la cola
-            this.setDirectionHead();//toca mover cabeza
-        }
-
-//        if (!gameOver && !isColision(e)  )
-    }
-
-    public boolean isColision(byte e) {
-        return this.esSnake(e) || this.block.getValue()==e;
-    }
-
-    private void checkLives(){
-        if(lives == 0){
-            this.snakeHead.setDir(Direction.NONE);
-            SoundPlayer.stopMusic(Asset.GAME_SOUND);
-            SoundPlayer.playMusic(Asset.GAME_OVER_SOUND, false);
-            if (snakeHead.getDir() == Direction.NONE) {
-                    initAnimation();
-                    this.pausar();
-                    this.initSnake();
-                    this.loadLevel(1);
-                    this.init();
-                    this.gameScreen.getGame().setScreenMenu();
-
-            }
-        }else {
-            this.initSnake(); //cargar snake de nuevo
-            this.loadLevel(l);
-            SoundPlayer.playSound(Asset.CRASH_SOUND, false);
-        }
-        food.generateFood(m);
-    }
 
     public void checkLevel(){
-        if (l == 1 && score >= 2){
+        if (l == 1 && score >= 3){
             l++;
             this.initSnake();
             this.loadLevel(l);
@@ -201,8 +214,7 @@ public class ControllerGame  extends Thread implements InputProcessor{
         FileReader fr;
         BufferedReader br;
         try {
-                String nivel = "G:\\05_Grafica\\02_proyecto\\myGame\\android\\assets\\blocks\\" ;
-                nivel += (l == 1)? ("level1.txt") : ("level3.txt") ;
+            String nivel = "android\\assets\\blocks\\" + ((l == 1)? ("level1.txt") : ("level3.txt"));
                 fr = new FileReader(nivel);
                 br = new BufferedReader(fr);
                 String linea;
